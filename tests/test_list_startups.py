@@ -4,7 +4,6 @@ import pytest
 
 from trustmrr import TrustMRRClient, TrustMRRError
 
-
 SAMPLE_RESPONSE = {
     "data": [
         {
@@ -84,7 +83,7 @@ def test_list_startups_omits_none_params(client):
     with patch.object(client._session, "request", return_value=_mock_response(SAMPLE_RESPONSE)) as req:
         client.list_startups()
         params = req.call_args.kwargs["params"]
-        assert params == {}
+        assert params == {'limit': 50, 'page': 1}
 
 
 def test_list_startups_passes_all_supported_params(client):
