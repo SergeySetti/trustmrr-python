@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import time
 from typing import Any, Iterator, Optional
 
 import requests
@@ -96,7 +97,23 @@ class TrustMRRClient:
 
         return self._request("GET", "/startups", params=params)
 
-    def iter_startups(self, **kwargs: Any) -> Iterator[dict]:
+    def iter_startups(
+        self,
+        *,
+        sleep: Optional[float] = None,
+        **kwargs: Any,
+    ) -> Iterator[dict]:
+        """Yield startups across all pages.
+
+        Args:
+            sleep: Optional seconds to wait between page requests. Useful to be
+                polite to the API and avoid rate limits. ``None`` or ``0`` means
+                no delay.
+            **kwargs: Forwarded to :meth:`list_startups` (e.g. ``limit``,
+                ``category``, ``min_mrr``).
+        """
+        if sleep is not None and sleep < 0:
+            raise ValueError("sleep must be >= 0")
         page = kwargs.pop("page", 1)
         while True:
             result = self.list_startups(page=page, **kwargs)
@@ -105,6 +122,8 @@ class TrustMRRClient:
             if not result.get("meta", {}).get("hasMore"):
                 break
             page += 1
+            if sleep:
+                time.sleep(sleep)
 
     def _request(self, method: str, path: str, *, params: Optional[dict] = None) -> dict:
         url = f"{self._base_url}/{path.lstrip('/')}"

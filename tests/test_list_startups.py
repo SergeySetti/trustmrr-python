@@ -171,6 +171,39 @@ def test_iter_startups_paginates(client):
     assert req.call_args_list[1].kwargs["params"]["page"] == 2
 
 
+def test_iter_startups_sleeps_between_pages(client):
+    page1 = {"data": [{"slug": "a"}], "meta": {"hasMore": True}}
+    page2 = {"data": [{"slug": "b"}], "meta": {"hasMore": False}}
+    responses = [_mock_response(page1), _mock_response(page2)]
+    with patch.object(client._session, "request", side_effect=responses), \
+         patch("trustmrr.client.time.sleep") as sleep_mock:
+        list(client.iter_startups(sleep=1.5))
+    sleep_mock.assert_called_once_with(1.5)
+
+
+def test_iter_startups_no_sleep_by_default(client):
+    page1 = {"data": [{"slug": "a"}], "meta": {"hasMore": True}}
+    page2 = {"data": [{"slug": "b"}], "meta": {"hasMore": False}}
+    responses = [_mock_response(page1), _mock_response(page2)]
+    with patch.object(client._session, "request", side_effect=responses), \
+         patch("trustmrr.client.time.sleep") as sleep_mock:
+        list(client.iter_startups())
+    sleep_mock.assert_not_called()
+
+
+def test_iter_startups_negative_sleep_raises(client):
+    with pytest.raises(ValueError):
+        list(client.iter_startups(sleep=-1))
+
+
+def test_iter_startups_does_not_sleep_after_last_page(client):
+    only = {"data": [{"slug": "a"}], "meta": {"hasMore": False}}
+    with patch.object(client._session, "request", return_value=_mock_response(only)), \
+         patch("trustmrr.client.time.sleep") as sleep_mock:
+        list(client.iter_startups(sleep=5))
+    sleep_mock.assert_not_called()
+
+
 def test_custom_base_url():
     c = TrustMRRClient(api_key="k", base_url="https://staging.trustmrr.com/api/v1/")
     with patch.object(c._session, "request", return_value=_mock_response(SAMPLE_RESPONSE)) as req:
