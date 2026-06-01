@@ -42,8 +42,8 @@ class TrustMRRClient:
     def list_startups(
         self,
         *,
-        page: Optional[int] = None,
-        limit: Optional[int] = None,
+        page: Optional[int] = 1,
+        limit: Optional[int] = 50,
         sort: Optional[str] = None,
         on_sale: Optional[bool] = None,
         category: Optional[str] = None,
