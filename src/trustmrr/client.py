@@ -97,6 +97,17 @@ class TrustMRRClient:
 
         return self._request("GET", "/startups", params=params)
 
+    def get_startup(self, slug: str) -> dict:
+        """Fetch a single startup by its slug.
+
+        Args:
+            slug: The startup's URL-friendly identifier (from the list
+                endpoint's ``slug`` field).
+        """
+        if not slug or not isinstance(slug, str):
+            raise ValueError("slug must be a non-empty string")
+        return self._request("GET", f"/startups/{slug}")
+
     def iter_startups(
         self,
         *,
